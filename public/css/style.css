@@ -1,0 +1,39 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  border-radius: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+}
+.playground-header {
+	width: 200px;
+	text-align: center;
+}
+.restart-button {
+
+}
+/*.playground {
+	width: 200px;
+	height: 200px;
+	border: 1px solid black;
+}*/
+.square {
+	width: 20px;
+	height: 20px;
+	border: 1px solid black;
+	float: left;
+}
+.mine {
+	background-color: red;
+}
+.green {
+	/*background-color: green;*/
+}
+.newline {
+	clear: left;
+}
+.hidden {
+	background-color: gray;
+}
