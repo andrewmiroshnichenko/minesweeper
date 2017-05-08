@@ -7,23 +7,12 @@
   border: 0;
   outline: 0;
 }
-.playground-header {
-	width: 200px;
-	text-align: center;
-}
-.restart-button {
-
-}
-/*.playground {
-	width: 200px;
-	height: 200px;
-	border: 1px solid black;
-}*/
 .square {
 	width: 20px;
 	height: 20px;
 	border: 1px solid black;
 	float: left;
+	cursor: default;
 }
 .mine {
 	background-color: red;
@@ -36,4 +25,37 @@
 }
 .hidden {
 	background-color: gray;
+	text-align: center;
+	color: white;
+}
+.playground {
+	margin: 0 auto;
+}
+.playground__cells {
+	overflow: hidden;
+}
+.playground-header,
+.options {
+	width: 200px;
+	margin: 0 auto;
+}
+.options__header {
+	width: 100%;
+}
+.options__item {
+	width: 100%;
+	margin: 3px 0;
+}
+.options__input {
+	font-size: 14px;
+	line-height: 14px;
+	border-bottom: 1px solid black;
+	width: 50px;
+	float: right;
+	text-align: right;
+}
+.options__apply {
+	width: 200px;
+	text-align: right;
+	margin: 0 auto;
 }

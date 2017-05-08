@@ -1,21 +1,27 @@
 import React from 'react';
 import Mine from './Mine';
 import Restart from './Restart';
+import SetParams from './SetParams';
 
 const App = React.createClass({
 	getInitialState: function() {
 		return ({
 			newGame: true,
-			height: 3,
-			width: 3,
-			minesCount: 1,
+			height: 10,
+			width: 10,
+			minesCount: 3,
 			shouldOpen: []
 		})
 	},
-	getMines: function() {
+	mines: [],
+	siblingMinesCount:[],
+	getMines: function(width, height, minesCount) {
 	  let mines = [];
-	  while (mines.length < this.state.minesCount) {
-	  	let index = Math.random() * this.state.height * this.state.width;
+	  let currentHeight = height || this.state.height;
+	  let currentWidth = width || this.state.width;
+	  let currentMinesCount = minesCount || this.state.minesCount;
+	  while (mines.length < currentMinesCount) {
+	  	let index = Math.random() * currentHeight * currentWidth;
 	  	index = Math.floor(index);
 	  	if (!~mines.indexOf(index)) {
 	  		mines.push(index);
@@ -23,17 +29,20 @@ const App = React.createClass({
 	  }
 	  return mines;
 	},
-	getMinesSiblings: function() {
+	getMinesSiblings: function(width, height) {
 	  let mineSiblings = [];
+	  let currentHeight = height || this.state.height;
+	  let currentWidth = width || this.state.width;
+	  console.log(this.mines, currentHeight, currentWidth);
 	  for (let i = 0; i < this.mines.length; i++) {
 	  	let localSiblings;
-		  if (!((this.mines[i] - this.state.width + 1) % this.state.width)) {
-		  	mineSiblings.push(this.mines[i] - this.state.width - 1, this.mines[i] - this.state.width, this.mines[i] - 1, this.mines[i] + this.state.width - 1, this.mines[i] + this.state.width);
-		  } else if (!(this.mines[i] % this.state.width)) {
-		  	mineSiblings.push(this.mines[i] - this.state.width, this.mines[i] - this.state.width + 1, this.mines[i] + 1, this.mines[i] + this.state.width, this.mines[i] + this.state.width + 1);
+		  if (!((this.mines[i] - currentWidth + 1) % currentWidth)) {
+		  	mineSiblings.push(this.mines[i] - currentWidth - 1, this.mines[i] - currentWidth, this.mines[i] - 1, this.mines[i] + currentWidth - 1, this.mines[i] + currentWidth);
+		  } else if (!(this.mines[i] % currentWidth)) {
+		  	mineSiblings.push(this.mines[i] - currentWidth, this.mines[i] - currentWidth + 1, this.mines[i] + 1, this.mines[i] + currentWidth, this.mines[i] + currentWidth + 1);
 		  } else {
-		  	mineSiblings.push(this.mines[i] - this.state.width - 1, this.mines[i] - this.state.width, this.mines[i] - this.state.width + 1, this.mines[i] - 1, 
-		  	this.mines[i] + 1, this.mines[i] + this.state.width - 1, this.mines[i] + this.state.width, this.mines[i] + this.state.width + 1);
+		  	mineSiblings.push(this.mines[i] - currentWidth - 1, this.mines[i] - currentWidth, this.mines[i] - currentWidth + 1, this.mines[i] - 1, 
+		  	this.mines[i] + 1, this.mines[i] + currentWidth - 1, this.mines[i] + currentWidth, this.mines[i] + currentWidth + 1);
 		  }
 	  }
 		let siblingMinesCount = {};
@@ -42,10 +51,21 @@ const App = React.createClass({
 		}
 		return siblingMinesCount;
 	},
-	newGame: function() {
-		this.setState({
-			newGame: true
-		});
+	restartGame: function(params) {
+		if (params.paramsChanged) {
+			this.setState({
+				width: params.width,
+				height: params.height,
+				newGame: true,
+				minesCount: params.minesCount,
+				shouldOpen: []
+			});
+		} else {
+			this.setState({
+				newGame: true,
+				shouldOpen: []
+			});
+		}
 	},
 	gameStarted: function() {
 		if (this.state.newGame) {
@@ -54,59 +74,69 @@ const App = React.createClass({
 			});
 		}
 	},
-	shouldOpen: [],
-	shouldntOpen: [],
 	showSquares: function (params) {
-		let i = +params.index;
-		if (params.clearIndex) {
-			this.shouldOpen.splice(this.shouldOpen.indexOf(i), 1);
-			this.shouldntOpen.push(i);
-			return;
-		}
-		if (params.userGenerated) this.shouldOpen = [];
-		let newShouldOpen = this.shouldOpen;
+		let initial = +params.index;
+		let squaresToOpen = [];
+		let newShouldOpen = [initial];
 		let w = this.state.width;
-		let currentArr = [];
-		if (!((i - w + 1) % w)) {
-			currentArr.push(i - 1, i - w - 1, i + w - 1, i + w, i - w);
-		} else if (!(i % w)) {
-			currentArr.push(i + 1, i - w + 1, i + w + 1, i + w, i - w);
-		} else {
-			currentArr.push(i - 1, i + 1, i - w - 1, i + w - 1, i + w + 1, i - w + 1, i + w, i - w);
+		while (newShouldOpen.length) {
+			let i = newShouldOpen[0];
+			if (~this.mines.indexOf(i) || this.siblingMinesCount[i]) {
+				newShouldOpen.splice(0, 1);
+				squaresToOpen.push(i);
+					continue;
+			};
+			let currentArr = [];
+			if (!((i - w + 1) % w)) {
+				currentArr.push(i - 1, i - w - 1, i + w - 1, i + w, i - w);
+			} else if (!(i % w)) {
+				currentArr.push(i + 1, i - w + 1, i + w + 1, i + w, i - w);
+			} else {
+				currentArr.push(i - 1, i + 1, i - w - 1, i + w - 1, i + w + 1, i - w + 1, i + w, i - w);
+			}
+			newShouldOpen = newShouldOpen.concat(currentArr.filter((item) => newShouldOpen.indexOf(item) < 0 && item >= 0 && squaresToOpen.indexOf(item) < 0 && item < this.state.height * this.state.width));
+			squaresToOpen.push(i);
+			newShouldOpen.splice(0, 1);
 		}
-		this.shouldOpen = newShouldOpen.concat(currentArr.filter((item) => newShouldOpen.indexOf(item) < 0 && item >= 0 && this.shouldntOpen.indexOf(item) < 0 && item < this.state.height * this.state.width));
-		if (!params.userGenerated) {
-			this.shouldOpen.splice(this.shouldOpen.indexOf(i), 1);
-			this.shouldntOpen.push(i);
-		}
-		// console.log(this.shouldntOpen.length, this.shouldOpen.length);
 		this.setState({
-			shouldOpen: this.shouldOpen
+			shouldOpen: squaresToOpen
 		});
 	},
 	componentWillMount: function() {
 		this.mines = this.getMines();
 		this.siblingMinesCount = this.getMinesSiblings();
 	},
-	shouldComponentUpdate: function(nextProps, nextState) {
-		// console.log(nextState.shouldOpen);
-		return true;
+	componentWillUpdate: function(nextProps, nextState) {
+		if (nextState.newGame) {
+			this.mines = this.getMines(nextState.width, nextState.height, nextState.minesCount);
+			this.siblingMinesCount = this.getMinesSiblings(nextState.width, nextState.height);
+		}
+	},
+	componentDidMount: function() {
+		document.querySelector('.playground').style.width = this.state.width * 20 + 'px';
+	},	
+	componentDidUpdate: function() {
+		document.querySelector('.playground').style.width = this.state.width * 20 + 'px';
 	},
 	render: function() {
   	let cells = [];
 		for (var i = 0; i < this.state.width * this.state.height; i++) {
+			let newline = !(i % this.state.width) ? 'newline' : '';
+			// console.log(newline);
   		if (~this.mines.indexOf(i)) {
-  			cells.push(<Mine shouldOpen={this.state.shouldOpen} index={i} showSquares={this.showSquares} restart={this.state.newGame} class="mine square" newline={!(i % this.state.width)} key={i}></Mine>)
+  			cells.push(<Mine shouldOpen={this.state.shouldOpen} index={i} showSquares={this.showSquares} restart={this.state.newGame} class="mine square" newline={' ' + newline} key={i}></Mine>)
   		} else if (this.siblingMinesCount[i]) {
-  			cells.push(<Mine shouldOpen={this.state.shouldOpen} index={i} showSquares={this.showSquares} restart={this.state.newGame} content={this.siblingMinesCount[i]} class="square green" newline={!(i % this.state.width)} key={i}></Mine>)
+  			cells.push(<Mine shouldOpen={this.state.shouldOpen} index={i} showSquares={this.showSquares} restart={this.state.newGame} content={this.siblingMinesCount[i]} class="square green" newline={' ' + newline} key={i}></Mine>)
   		} else {
-  			cells.push(<Mine shouldOpen={this.state.shouldOpen} index={i} showSquares={this.showSquares} restart={this.state.newGame} class="square" newline={!(i % this.state.width)} key={i}></Mine>)
+  			cells.push(<Mine shouldOpen={this.state.shouldOpen} index={i} showSquares={this.showSquares} restart={this.state.newGame} class="square" newline={' ' + newline} key={i}></Mine>)
   		}
 		}
+
 		return (
-			<div>
-				<Restart restart={this.newGame}/>
-				<div className="playground" onClick={this.gameStarted}>{cells}</div>
+			<div className="playground">
+				<SetParams setNewParams={this.restartGame} values={{width: this.state.width, height: this.state.height, minesCount: this.state.minesCount}} />
+				<Restart restart={this.restartGame}/>
+				<div className="playground__cells" onClick={this.gameStarted}>{cells}</div>
 			</div>
 		)
 	}
