@@ -1,0 +1,189 @@
+<!-- <link rel="import" href="../polymer/polymer-element.html"> -->
+
+<dom-module id="se-timer">
+  <template>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+        border-radius: 0;
+        background: none;
+        border: 0;
+        outline: 0;
+      }    
+      :host {
+        display: block;
+      }
+      .display {
+        font-size: 0;
+        margin: 0 22px 0 21px; /*Calculated as equal to distance from glyph top to top edge of top menu. 21 - magic number for Android FF*/
+        white-space: nowrap;
+      }
+      span {
+        font: 45px/45px 'Roboto', sans-serif;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      .none {
+        display: none;
+      }
+    </style>
+    <div class="live-countdown__duration-wrapper">
+      <div class="display" title="Record duration">
+        <span class="display-hours none"></span>
+        <span class="display-delimiter-first none">:</span>
+        <span class="display-minutes none"></span>
+        <span class="display-delimiter-second none">:</span>
+        <span class="display-seconds none"></span>
+        <span class="display-delimiter-third none">.</span>
+        <span class="display-milliseconds none"></span>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    /**
+     * `se-timer`
+     * shows time in certain
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class SeTimer extends Polymer.Element {
+      static get is() { return 'se-timer'; }
+      static get properties() {
+        return {
+          format: {
+            type: String,
+            observer: '_formatObserver',
+            value: 'hh:mm:ss'
+          },
+          value: {
+            type: Number,
+            observer: '_valueObserver',
+            value: 0
+          },
+          state: {
+            type: String,
+            observer: '_stateObserver'
+          },
+          timerStep: {
+            type: Number,
+            value: 500,
+            reflectToAttribute: true
+          },
+          __timer: {
+            type: Object
+          },
+          __countedInterval: {
+            type: Number,
+            observer: '__countedIntervalObserver'
+          },
+          __displayElement: {
+            type: Object,
+            value: {}
+          }
+        };
+      }
+      constructor() {
+        super();
+        this._boundShowTimeOnDisplay = this._showTimeOnDisplay.bind(this);
+      }
+      ready() {
+        super.ready();
+        let shadow = this.shadowRoot;
+        this.__displayElement.root = shadow.querySelector('.display');
+        this.__displayElement.hoursSpan = shadow.querySelector('.display-hours');
+        this.__displayElement.firstDelimiter = shadow.querySelector('.display-delimiter-first');
+        this.__displayElement.minutesSpan = shadow.querySelector('.display-minutes');
+        this.__displayElement.secondDelimiter = shadow.querySelector('.display-delimiter-second');
+        this.__displayElement.secondsSpan = shadow.querySelector('.display-seconds');
+        this.__displayElement.thirdDelimiter = shadow.querySelector('.display-delimiter-third');
+        this.__displayElement.millisecondsSpan = shadow.querySelector('.display-milliseconds');
+        if (this.format) {
+          this._formatObserver(this.format);
+        }
+        if (this.value || this.value === 0) {
+          this._valueObserver(this.value);
+        }
+      }
+      connectedCallback() {
+        super.connectedCallback();
+      }
+      disconnectedCallback() {
+        super.disconnectedCallback();
+      }
+      _showTimeOnDisplay() {
+        this.__countedInterval = +new Date();
+      }
+      _stateObserver(newValue) {
+        switch (newValue) {
+          case 'count':
+            this.__countedInterval = +new Date();
+            this.__timer = setInterval(this._boundShowTimeOnDisplay, this.timerStep);
+            break;
+          case 'stop':
+            this.__countedInterval = 's';
+            clearInterval(this.__timer);
+            break;
+        }
+      }
+      __countedIntervalObserver(newValue, oldValue) {
+        if (isNaN(newValue - oldValue)) return;
+        this.value = this.value + newValue - oldValue;
+      }
+      _valueObserver(newValue, oldValue) {
+        if (!this._isNumeric(newValue)) return;
+        if (!this.__displayElement.root) return;
+        let valueForCompute = newValue < 360000000 ? newValue : 359999999;
+        this.__displayElement.hoursSpan.textContent = this._formatTimeOnDisplay(valueForCompute).hours;
+        this.__displayElement.minutesSpan.textContent = this._formatTimeOnDisplay(valueForCompute).minutes;
+        this.__displayElement.secondsSpan.textContent = this._formatTimeOnDisplay(valueForCompute).seconds;
+        this.__displayElement.millisecondsSpan.textContent = this._formatTimeOnDisplay(valueForCompute).milliseconds;
+      }
+      _formatObserver(newValue) {
+        if (!this.__displayElement.root) return;
+        if (!~newValue.indexOf('hh') && !~newValue.indexOf('mm') && !~newValue.indexOf('ss')) return;
+        [].forEach.call(this.__displayElement.root.children, function(child) {
+          child.classList.add('none');
+        });
+        if (~newValue.indexOf('hh')) this.__displayElement.hoursSpan.classList.remove('none');
+        if (~newValue.indexOf('hh:')) this.__displayElement.firstDelimiter.classList.remove('none');
+        if (~newValue.indexOf('mm')) this.__displayElement.minutesSpan.classList.remove('none');
+        if (~newValue.indexOf('mm:')) this.__displayElement.secondDelimiter.classList.remove('none');
+        if (~newValue.indexOf('ss')) this.__displayElement.secondsSpan.classList.remove('none');
+        if (~newValue.indexOf('ss.')) this.__displayElement.thirdDelimiter.classList.remove('none');
+        if (~newValue.indexOf('ms')) this.__displayElement.millisecondsSpan.classList.remove('none');
+      }
+      _isNumeric(n) {
+        return !isNaN(parseFloat(n)) && isFinite(n);
+      }
+      _formatSingleTimeValue(argument) {
+        return argument > 9 ? argument : '0' + argument;
+      }
+      _formatMillisecondsValue(ms) {
+        let formatted;
+        if (ms < 10) {
+          formatted = '00' + ms;
+        } else if (ms < 100) {
+          formatted = '0' + ms;
+        } else {
+          formatted = ms;
+        }
+        return formatted;
+      }
+      _formatTimeOnDisplay(ms) {
+        let hours = this._formatSingleTimeValue(Math.floor(ms / 3600000));
+        let minutes = this._formatSingleTimeValue(Math.floor((ms - hours * 3600000) / 60000));
+        let seconds = this._formatSingleTimeValue(Math.floor((ms - hours * 3600000 - minutes * 60000) / 1000));
+        let milliseconds = this._formatMillisecondsValue(ms - hours * 3600000 - minutes * 60000 - seconds * 1000);
+        return {hours: hours, minutes: minutes, seconds: seconds, milliseconds: milliseconds};
+      }
+    }
+
+    window.customElements.define(SeTimer.is, SeTimer);
+  </script>
+</dom-module>
+
