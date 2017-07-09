@@ -13,7 +13,7 @@ const SetNumber = React.createClass({
   },
   changeWidth: function(e) {
     let value;
-    if (+e.target.value < 40) {
+    if (+e.target.value < 41) {
       value = +e.target.value;
       let errorIndex = SetNumber.erroredFields.indexOf('width');
       SetNumber.erroredFields.splice(errorIndex, 1);
@@ -27,7 +27,7 @@ const SetNumber = React.createClass({
   },
   changeHeight: function(e) {
     let value;
-    if (+e.target.value < 40) {
+    if (+e.target.value < 41) {
       value = +e.target.value;
       let errorIndex = SetNumber.erroredFields.indexOf('height');
       SetNumber.erroredFields.splice(errorIndex, 1);

@@ -6,6 +6,7 @@
   background: none;
   border: 0;
   outline: 0;
+  font-family: 'Roboto';
 }
 .square {
 	width: 20px;
@@ -39,15 +40,26 @@
 	width: 200px;
 	margin: 0 auto;
 }
-.playground-header {
-  text-align: center;
+.options {
   overflow: hidden;
 }
+.playground-header {
+  overflow: hidden;
+  display: -webkit-flex;
+  display: -moz-flex;
+  display: -ms-flex;
+  display: -o-flex;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 2px 0;
+}
 .minecount {
-  float: left;
+  flex: 0 0 0;
+  width: 0;
 }
 .timeshow {
-  float: right;
+  flex: 0 0 0;
   width: 0;
   height: 10px;
 }
@@ -69,10 +81,23 @@
 	float: right;
 	text-align: right;
 }
+.restart-button,
 .options__apply {
-	width: 200px;
-	text-align: right;
-	margin: 0 auto;
+  cursor: pointer;
+  font: 600 10px 'Roboto', sans-serif;
+  padding: 5px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+.options__apply {
+  padding: 9px;
+  line-height: 16px;
+  margin: 0 2px 2px 0;
+  float: right;
+}
+.restart-button:hover,
+.options__apply:hover {
+  box-shadow: 0 1px 3px 0 #999;
 }
 .options__error-message {
   font-size: 10px;
